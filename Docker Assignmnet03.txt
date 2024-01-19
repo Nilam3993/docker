@@ -1,0 +1,187 @@
+1. Run four HTTPD Docker containers with distinct, meaningful names, and apply restart policies
+ (NO, On-Failure, Always, and Unless-Stopped) to each of the four containers, respectively.  
+ Demonstrate that the restart policies function as expected.
+ 
+Answer :-
+Nilam# docker container run -itd --name my_cloud_httpd_container --restart no  httpd
+bf2917eab2500acfef3bc4f4fbd515152c92a80be2df59a3bb09e05077fbc261
+Nilam# docker container ls
+CONTAINER ID   IMAGE     COMMAND              CREATED         STATUS         PORTS     NAMES
+bf2917eab250   httpd     "httpd-foreground"   7 seconds ago   Up 6 seconds   80/tcp    my_cloud_httpd_container
+Nilam#
+=========================================================================================
+Nilam#  docker container run -itd --name  my_cloud_httpd_container_02 --restart on-failure httpd
+f54fb4abbcf0b9625806d4e7edf0381226c575d63a485cb658ace2a35d2a8829
+Nilam#
+Nilam# docker container ls
+CONTAINER ID   IMAGE     COMMAND              CREATED         STATUS         PORTS     NAMES
+f54fb4abbcf0   httpd     "httpd-foreground"   4 seconds ago   Up 3 seconds   80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"   4 minutes ago   Up 4 minutes   80/tcp    my_cloud_httpd_container
+Nilam#
+=======================================================================================================
+Nilam#  docker container run --name my_cloud_httpd_container_03 --restart always httpd sleep 10
+Nilam# docker container ls
+CONTAINER ID   IMAGE     COMMAND              CREATED          STATUS          PORTS     NAMES
+9c7b233e3edf   httpd     "sleep 10"           16 seconds ago   Up 5 seconds    80/tcp    my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"   18 minutes ago   Up 18 minutes   80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"   23 minutes ago   Up 23 minutes   80/tcp    my_cloud_httpd_container
+=======================================================================================================
+Nilam# docker container run --name my_cloud_httpd_container_04 --restart unless-stopped httpd sleep 10
+Nilam# docker container ls
+CONTAINER ID   IMAGE     COMMAND              CREATED          STATUS          PORTS     NAMES
+1b5835354961   httpd     "sleep 10"           13 seconds ago   Up 1 second     80/tcp    my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"           58 seconds ago   Up 4 seconds    80/tcp    my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"   19 minutes ago   Up 19 minutes   80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"   23 minutes ago   Up 23 minutes   80/tcp    my_cloud_httpd_container
+Nilam#
+ =================================================================================
+restart policies
+ 
+ Nilam# docker container ls
+CONTAINER ID   IMAGE     COMMAND              CREATED          STATUS          PORTS     NAMES
+1b5835354961   httpd     "sleep 10"           3 minutes ago    Up 1 second     80/tcp    my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"           4 minutes ago    Up 3 seconds    80/tcp    my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"   23 minutes ago   Up 23 minutes   80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"   27 minutes ago   Up 27 minutes   80/tcp    my_cloud_httpd_container
+Nilam#
+Nilam# docker container stop my_cloud_httpd_container
+my_cloud_httpd_container
+Nilam# docker container ls -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS                        PORTS     NAMES
+1b5835354961   httpd     "sleep 10"               4 minutes ago    Up 7 seconds                  80/tcp    my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"               5 minutes ago    Up 10 seconds                 80/tcp    my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"       23 minutes ago   Up 23 minutes                 80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"       27 minutes ago   Exited (0) 9 seconds ago                my_cloud_httpd_container
+ 
+ Nilam#  docker container top my_cloud_httpd_container_02
+UID                 PID                 PPID                C                   STIME               TTY                 TIME                CMD
+root                5369                5348                0                   12:03               pts/0               00:00:00            httpd -DFOREGROUND
+www-data            5392                5369                0                   12:03               pts/0               00:00:00            httpd -DFOREGROUND
+www-data            5393                5369                0                   12:03               pts/0               00:00:00            httpd -DFOREGROUND
+www-data            5394                5369                0                   12:03               pts/0               00:00:00            httpd -DFOREGROUND
+Nilam#
+
+Nilam# kill -9 5392
+Nilam# docker container ls -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS                        PORTS     NAMES
+1b5835354961   httpd     "sleep 10"               6 minutes ago    Up 2 seconds                  80/tcp    my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"               7 minutes ago    Up 3 seconds                  80/tcp    my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"       25 minutes ago   Up 25 minutes                 80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"       29 minutes ago   Exited (0) 2 minutes ago                my_cloud_httpd_container
+ 
+ Nilam# docker container stop my_cloud_httpd_container_03
+my_cloud_httpd_container_03
+Nilam# docker container ls -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS                        PORTS     NAMES
+1b5835354961   httpd     "sleep 10"               7 minutes ago    Up 3 seconds                  80/tcp    my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"               8 minutes ago    Exited (0) 5 seconds ago                my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"       27 minutes ago   Up 27 minutes                 80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"       31 minutes ago   Exited (0) 3 minutes ago                my_cloud_httpd_container
+
+Nilam# docker container stop my_cloud_httpd_container_04
+my_cloud_httpd_container_04
+Nilam#
+Nilam# docker container ls -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS                          PORTS     NAMES
+1b5835354961   httpd     "sleep 10"               9 minutes ago    Exited (0) 3 seconds ago                  my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"               9 minutes ago    Exited (0) About a minute ago             my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"       28 minutes ago   Up 28 minutes                   80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"       32 minutes ago   Exited (0) 4 minutes ago                  my_cloud_httpd_container 
+ 
+ 
+ ==========================================================================================================
+2. Change the restart policy of a above running container from the default to a custom policy 
+using the docker update command.
+e.g. docker update --help
+Nilam# docker container ls -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS                        PORTS     NAMES
+1b5835354961   httpd     "sleep 10"               12 minutes ago   Exited (0) 3 minutes ago                my_cloud_httpd_container_04
+9c7b233e3edf   httpd     "sleep 10"               12 minutes ago   Exited (0) 4 minutes ago                my_cloud_httpd_container_03
+f54fb4abbcf0   httpd     "httpd-foreground"       31 minutes ago   Up 31 minutes                 80/tcp    my_cloud_httpd_container_02
+bf2917eab250   httpd     "httpd-foreground"       35 minutes ago   Exited (0) 7 minutes ago                my_cloud_httpd_container
+	
+	
+Nilam#  docker update --restart on-failure my_cloud_httpd_container
+my_cloud_httpd_container
+
+Nilam# docker container ls
+CONTAINER ID   IMAGE     COMMAND              CREATED          STATUS          PORTS     NAMES
+f54fb4abbcf0   httpd     "httpd-foreground"   35 minutes ago   Up 35 minutes   80/tcp    my_cloud_httpd_container_02
+Nilam# docker inspect my_cloud_httpd_container | grep Name
+        "Name": "/my_cloud_httpd_container",
+                "Name": "on-failure",
+            "Name": "overlay2"
+Nilam#
+
+=========================================================================================================
+ 3. Launch an NGINX container with a meaningful name and expose it on the host's port 80. 
+Create an "index.html" file containing the text "Hello there, Let's be the Team CloudEthiX," and 
+copy the file to the container's "/usr/share/nginx/html/" location. 
+Access the container in a browser to verify that the webpage displays correctly.
+Answer :-
+Nilam# docker container run -itd -p 8282:80 --name Nilam_nginx nginx
+8de88053a2f663708a759ba1e701d97f6778f5329e67d350acfb1112c0c44242
+Nilam#
+Nilam# curl localhost:80
+hello Nilam
+Nilam# docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                                   NAMES
+8de88053a2f6   nginx     "/docker-entrypoint.…"   56 seconds ago   Up 55 seconds   0.0.0.0:8282->80/tcp, :::8282->80/tcp   Nilam_nginx
+f54fb4abbcf0   httpd     "httpd-foreground"       41 minutes ago   Up 41 minutes   80/tcp                                  my_cloud_httpd_container_02
+Nilam#
+Nilam# echo "Hello there, Let's be the Team CloudEthiX," > index.html
+Nilam#
+Nilam#  docker container cp index.html nginx_cont:/usr/share/nginx/html/
+no such directory
+Nilam#  docker container cp index.html Nilam_nginx:/usr/share/nginx/html/
+Successfully copied 2.05kB to Nilam_nginx:/usr/share/nginx/html/
+Nilam# ip r l
+default via 172.28.16.1 dev eth0
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1
+172.28.16.0/20 dev eth0 proto kernel scope link src 172.28.27.69
+Nilam# curl 172.28.27.69:8282
+Hello there, Let's be the Team CloudEthiX,
+
+===================================================================================
+ 
+4. Run a docker container with CPU and Memory limit.  docker container run --help 
+ref links :- https://phoenixnap.com/kb/docker-memory-and-cpu-limit
+https://www.baeldung.com/ops/docker-memory-limit
+Answer :-
+Nilam# docker run -dit --memory="512m" --cpus="1.0" --name nilam ubuntu
+60ffd6c298b347f4c7b9fe3aad1e8714c3afc5726ff9d5f32e89699350c95835
+Nilam# docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                                   NAMES
+60ffd6c298b3   ubuntu    "/bin/bash"              7 seconds ago    Up 6 seconds                                            nilam
+8de88053a2f6   nginx     "/docker-entrypoint.…"   11 minutes ago   Up 11 minutes   0.0.0.0:8282->80/tcp, :::8282->80/tcp   Nilam_nginx
+f54fb4abbcf0   httpd     "httpd-foreground"       51 minutes ago   Up 51 minutes   80/tcp                                  my_cloud_httpd_container_02
+Nilam#
+Nilam# docker inspect nilam | grep -iwA 1 memory
+            "Memory": 536870912,
+            "NanoCpus": 1000000000,
+Nilam#
+
+===========================================================================================++
+				
+5.  Update CUP and Memory of docker container using docker update.
+ref links :- https://docs.docker.com/engine/reference/commandline/update/
+
+Nilam# docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED             STATUS             PORTS                                   NAMES
+60ffd6c298b3   ubuntu    "/bin/bash"              8 minutes ago       Up 8 minutes                                               nilam
+8de88053a2f6   nginx     "/docker-entrypoint.…"   20 minutes ago      Up 20 minutes      0.0.0.0:8282->80/tcp, :::8282->80/tcp   Nilam_nginx
+f54fb4abbcf0   httpd     "httpd-foreground"       About an hour ago   Up About an hour   80/tcp                                  my_cloud_httpd_container_02
+Nilam#
+Nilam#
+Nilam# docker update --cpus 1 --memory 300m 60ffd6c298b3
+60ffd6c298b3
+Nilam#
+Nilam#
+Nilam#  docker container stats
+CONTAINER ID   NAME                          CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O   PIDS
+60ffd6c298b3   nilam                         0.00%     3.73MiB / 300MiB      1.24%     1.01kB / 0B      0B / 0B     1
+8de88053a2f6   Nilam_nginx                   0.00%     6.246MiB / 3.714GiB   0.16%     3.19kB / 2.2kB   0B / 0B     5
+f54fb4abbcf0   my_cloud_httpd_container_02   0.01%     23.98MiB / 3.714GiB   0.63%     1.23kB / 0B      0B / 0B     82
+CONTAINER ID   NAME                          CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O   PIDS
+60ffd6c298b3   nilam                         0.00%     3.73MiB / 300MiB      1.24%     1.01kB / 0B      0B / 0B     1
+8de88053a2f6   Nilam_nginx                   0.00%     6.246MiB / 3.714GiB   0.16%     3.19kB / 2.2kB   0B / 0B     5
